@@ -12,9 +12,26 @@ class Spaceship extends Phaser.GameObjects.Sprite {
         if (this.x<= 0 - this.width){
             this.x = game.config.width;
         }
+
+        
+    
+        
+
     }
 
     reset(){
         this.x=game.config.width;
     }
+
+    fireLaser(){
+        if (Phaser.Math.Between(1, 100) === 1) {
+            return new Laser(this.scene, this.x, this.y);
+        }
+        return null;
+    }
+    
+
+       
+    
 }
+

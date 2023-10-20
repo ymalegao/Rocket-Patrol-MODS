@@ -1,3 +1,4 @@
+
 class Play extends Phaser.Scene {
     constructor(){
         super("playScene");
@@ -7,6 +8,7 @@ class Play extends Phaser.Scene {
         this.load.image('spaceship', './Assets/spaceship.png')
         this.load.image('starfield', './Assets/starfield.png')
         this.load.spritesheet('explosion', './Assets/explosion.png', {frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9});
+        this.load.image('lazer', './Assets/lazer.png')
 
     }
     
@@ -19,9 +21,9 @@ class Play extends Phaser.Scene {
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
         this.p1Rocket = new Rocket(this, game.config.width/2, game.config.height-borderUISize-borderPadding, 'rocket').setOrigin(0,0);
-        this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4,'spaceship',0,30).setOrigin(0,0);
-        this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20).setOrigin(0,0);
-        this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10).setOrigin(0,0);
+        this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4,'spaceship',0,30, 'lazer').setOrigin(0,0);
+        this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20, 'lazer').setOrigin(0,0);
+        this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10, 'lazer').setOrigin(0,0);
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
@@ -54,7 +56,9 @@ class Play extends Phaser.Scene {
             this.gameOver = true;
 
           }, null, this);
-
+          
+          
+          
 
     }
 
@@ -93,7 +97,33 @@ class Play extends Phaser.Scene {
             this.shipExplode(this.ship01);  
             this.p1Rocket.reset()
             console.log('kaboom ship 01');
-          }       
+          }
+          let laser1 = this.ship01.fireLaser();
+          let laser2 = this.ship02.fireLaser();
+          let laser3 = this.ship03.fireLaser();
+          
+     
+        if (laser3 && this.checkOverlap(this.p1Rocket, laser3)) {
+          console.log("overlap3");
+          laser3.destroy();
+          this.p1Rocket.reset();
+        
+        }
+        if (laser2 && this.checkOverlap(this.p1Rocket, laser2)) {
+          console.log("overlap2");
+          laser2.destroy();
+          this.p1Rocket.reset();
+        
+        }
+        if (laser1 && this.checkOverlap(this.p1Rocket, laser1)) {
+          console.log("overlap1");
+          laser1.destroy();
+          this.p1Rocket.reset();
+        
+        }
+        
+
+          
 
     }
 
@@ -104,6 +134,25 @@ class Play extends Phaser.Scene {
             return false
         }
     }
+
+   
+
+    checkOverlap(rocket, laser){
+      let bound1 = rocket.getBounds();
+      
+
+      let bound2 = laser.getBounds();
+      console.log(bound1, bound2.x)
+      console.log(Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2));
+      return Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2);
+    }
+      
+    
+      
+      
+  
+
+    
 
     shipExplode(ship) {
         ship.alpha = 0;
@@ -118,10 +167,11 @@ class Play extends Phaser.Scene {
         this.scoreLeft.text = this.p1Score;
         this.sound.play('sfx_explosion');
       }
+
+      
       
 
-
-
 }
+    
 
 
