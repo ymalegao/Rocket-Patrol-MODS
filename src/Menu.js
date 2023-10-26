@@ -11,6 +11,11 @@ class Menu extends Phaser.Scene {
         this.load.audio('sfx_select', './Assets/blip_select12.wav');
         this.load.audio('sfx_explosion', './Assets/explosion38.wav');
         this.load.audio('sfx_rocket', './Assets/rocket_shot.wav');
+        this.load.audio('crash1', './Assets/crash1.m4a');
+        this.load.audio('crash2', './Assets/crash2.m4a');
+        this.load.audio('crash3', './Assets/crash3.m4a');
+        this.load.audio('crash4', './Assets/crash4.m4a');
+
     }
     
     
@@ -40,6 +45,7 @@ class Menu extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(keyLEFT)) {
             game.settings = {
             spaceshipSpeed: 3,
+            fastshipspeed : 5, 
             gameTimer: 60000    
             }
             this.sound.play('sfx_select');
@@ -48,6 +54,7 @@ class Menu extends Phaser.Scene {
           if (Phaser.Input.Keyboard.JustDown(keyRIGHT)) {
             game.settings = {
             spaceshipSpeed: 4,
+            fastshipspeed : 6, 
             gameTimer: 45000    
             }
             this.sound.play('sfx_select');

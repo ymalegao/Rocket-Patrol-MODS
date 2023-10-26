@@ -9,6 +9,7 @@ class Play extends Phaser.Scene {
         this.load.image('starfield', './Assets/starfield.png')
         this.load.spritesheet('explosion', './Assets/explosion.png', {frameWidth: 64, frameHeight: 32, startFrame: 0, endFrame: 9});
         this.load.image('lazer', './Assets/lazer.png')
+        this.load.image('fastspaceship', './Assets/fasterspaceship.png')
 
     }
     
@@ -21,9 +22,11 @@ class Play extends Phaser.Scene {
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
         this.p1Rocket = new Rocket(this, game.config.width/2, game.config.height-borderUISize-borderPadding, 'rocket').setOrigin(0,0);
-        this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4,'spaceship',0,30, 'lazer').setOrigin(0,0);
-        this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20, 'lazer').setOrigin(0,0);
-        this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10, 'lazer').setOrigin(0,0);
+        this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4,'spaceship', 0,30, 'lazer', this.p1Rocket).setOrigin(0,0);
+        this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20, 'lazer',this.p1Rocket).setOrigin(0,0);
+        this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10, 'lazer',this.p1Rocket).setOrigin(0,0);
+        this.ship04 = new Fastspaceship(this, game.config.width, borderUISize*2 + borderPadding*5, 'fastspaceship', 0, 40, 'lazer',this.p1Rocket).setOrigin(0,0);
+
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
         keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
@@ -50,12 +53,47 @@ class Play extends Phaser.Scene {
           this.gameOver = false;
 
           scoreConfig.fixedWidth = 0;
-          this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
-            this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
-            this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press R to Restart or <- for Menu', scoreConfig).setOrigin(0.5);
-            this.gameOver = true;
+          
+          
+          // this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
+          //   this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
+          //   this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press R to Restart or <- for Menu', scoreConfig).setOrigin(0.5);
+          //   this.gameOver = true;
 
-          }, null, this);
+          // }, null, this);
+          this.remainingTime = game.settings.gameTimer/1000;
+          console.log(this.remainingTime);
+
+          this.timeDisplay = this.add.text(borderUISize+borderPadding*30, borderPadding+borderUISize+3, 'Time: ' + this.remainingTime, scoreConfig);
+
+          this.time.addEvent({
+            delay: 1000, 
+            callback: () => {
+                if (this.remainingTime > 0) {
+                    this.remainingTime-=1;
+                    this.timeDisplay.text = 'Time: ' + this.remainingTime;
+                } else {
+                    this.gameOver = true;
+                    this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
+                    this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press R to Restart or <- for Menu', scoreConfig).setOrigin(0.5);
+                }
+            },
+            loop: true
+        });
+        this.input.setDefaultCursor('pointer');
+        this.input.on('pointermove', (pointer) => {
+          if (!this.p1Rocket.isFiring){
+            this.p1Rocket.x = pointer.x;
+          }
+          
+          
+        });
+
+
+
+
+
+         
           
           
           
@@ -78,10 +116,12 @@ class Play extends Phaser.Scene {
             this.ship01.update(); 
             this.ship02.update(); 
             this.ship03.update();
+            this.ship04.update();
         }
         if(this.checktoCollision(this.p1Rocket, this.ship03)) {
             this.p1Rocket.reset()
             this.shipExplode(this.ship03);   
+            this.remainingTime+=1;
 
             this.ship03.reset();
             console.log('kaboom ship 03');
@@ -89,40 +129,42 @@ class Play extends Phaser.Scene {
         if (this.checktoCollision(this.p1Rocket, this.ship02)) {
             this.shipExplode(this.ship02);
             this.ship02.reset();
-            this.p1Rocket.reset()
+            this.p1Rocket.reset();
+            this.remainingTime+=1;
+
             console.log('kaboom ship 02');
           }
         if (this.checktoCollision(this.p1Rocket, this.ship01)) {
             this.ship01.reset();
             this.shipExplode(this.ship01);  
-            this.p1Rocket.reset()
+            this.p1Rocket.reset();
+            this.remainingTime+=1;
+
             console.log('kaboom ship 01');
           }
-          let laser1 = this.ship01.fireLaser();
-          let laser2 = this.ship02.fireLaser();
-          let laser3 = this.ship03.fireLaser();
-          
-     
-        if (laser3 && this.checkOverlap(this.p1Rocket, laser3)) {
-          console.log("overlap3");
-          laser3.destroy();
-          this.p1Rocket.reset();
-        
-        }
-        if (laser2 && this.checkOverlap(this.p1Rocket, laser2)) {
-          console.log("overlap2");
-          laser2.destroy();
-          this.p1Rocket.reset();
-        
-        }
-        if (laser1 && this.checkOverlap(this.p1Rocket, laser1)) {
-          console.log("overlap1");
-          laser1.destroy();
-          this.p1Rocket.reset();
-        
-        }
+
+          if (this.checktoCollision(this.p1Rocket, this.ship04)) {
+            this.ship04.reset();
+            this.shipExplode(this.ship04);  
+            this.p1Rocket.reset();
+            this.remainingTime+=5;
+
+            console.log('kaboom ship 04');
+          }
+          if (this.remainingTime !== undefined) {
+            this.timeDisplay.text = 'Time: ' + this.remainingTime;
+          }
+
         
 
+
+          
+
+        
+      
+     
+        
+       
           
 
     }
@@ -137,15 +179,15 @@ class Play extends Phaser.Scene {
 
    
 
-    checkOverlap(rocket, laser){
-      let bound1 = rocket.getBounds();
+    // checkOverlap(rocket, laser){
+    //   let bound1 = rocket.getBounds();
       
 
-      let bound2 = laser.getBounds();
-      console.log(bound1, bound2.x)
-      console.log(Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2));
-      return Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2);
-    }
+    //   let bound2 = laser.getBounds();
+    //   console.log(bound1, bound2.x)
+    //   console.log(Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2));
+    //   return Phaser.Geom.Intersects.RectangleToRectangle(bound1, bound2);
+    // }
       
     
       
@@ -157,6 +199,9 @@ class Play extends Phaser.Scene {
     shipExplode(ship) {
         ship.alpha = 0;
         let boom = this.add.sprite(ship.x, ship.y, 'explosion').setOrigin(0, 0);
+        let soundarr = ['crash1', 'crash2', 'crash3', 'crash4', 'sfx_explosion']
+        let r = Math.floor(Math.random() * 5);
+        console.log(r);
         boom.anims.play('explode');             
         boom.on('animationcomplete', () => {    
           ship.reset();                         
@@ -165,7 +210,7 @@ class Play extends Phaser.Scene {
         });
         this.p1Score+=ship.points;
         this.scoreLeft.text = this.p1Score;
-        this.sound.play('sfx_explosion');
+        this.sound.play(soundarr[r]);
       }
 
       
